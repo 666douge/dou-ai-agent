@@ -1,0 +1,79 @@
+package com.dou.douaiagent.app;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.InMemoryChatMemory;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.stereotype.Component;
+
+import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY;
+import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_RETRIEVE_SIZE_KEY;
+
+@Component
+@Slf4j
+public class LoveApp {
+
+    private  final ChatClient chatClient;
+
+    private  final String SYSTEM_PROMPT = "你是精通两性心理、高情商聊天、情感升温的顶级恋爱大师，擅长根据不同场景、性格、关系阶段，" +
+            "给出自然不油腻、真诚不尴尬的聊天话术与行动建议，核心原则：不舔、不尬、不油腻，舒适拉近距离，精准戳中好感点。";
+
+
+    /**
+     * 初始话 chatClient
+     * 2、也可以指定模型创建chatclient，下面就是这种方式。
+     * 以阿里云百炼 的dashscopeChatModel为例
+     * @param dashscopeChatModel 或千问 qwenChatModel
+     */
+    public LoveApp(ChatModel dashscopeChatModel) {
+        //初始化基于内存的对话记忆
+        ChatMemory chatMemory = new InMemoryChatMemory();
+        chatClient = ChatClient.builder(dashscopeChatModel)//初始化指定的chatModel
+                .defaultSystem(SYSTEM_PROMPT)//设置系统提示词
+                .defaultAdvisors(//增加advisor拦截器
+                        MessageChatMemoryAdvisor.builder(chatMemory).build()
+                )
+                .build();
+    }
+
+
+    /**
+     * 初始话 chatClient
+     * Spring AI 提供 Spring Boot 自动配置，创建原型 ChatClient.Builder Bean供你注入你的类
+     * @param builder
+     */
+    /*public LoveApp(ChatClient.Builder builder) {
+        //初始化基于内存的记忆对话
+        ChatMemory chatMemory = new InMemoryChatMemory();
+        chatClient = builder
+                .defaultSystem(SYSTEM_PROMPT)
+                .defaultAdvisors(
+                        new MessageChatMemoryAdvisor(chatMemory)
+                )
+                .build();
+    }*/
+
+
+    /**
+     * AI 基础对话（支持多轮对话记忆）
+     * @param message
+     * @param chatId
+     * @return
+     */
+    public String doChat(String message, String chatId){
+        ChatResponse chatResponse = chatClient
+                .prompt()
+                .user(message)//设置用户提示词
+                .advisors(advisor -> advisor.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
+                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))//这里的10条是关联上下文的会话条数
+                .call()
+                .chatResponse();
+
+        String content = chatResponse.getResult().getOutput().getText();
+        log.info("content: {}", content);
+        return content;
+    }
+}
