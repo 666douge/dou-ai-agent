@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: dou-ai-agent
+  profiles:
+    active: local
+# 这里的local实际引用的 application-local.yml中配置的参数
+
+server:
+  port: 8123
+  servlet:
+    context-path: /api
+
+# springdoc-openapi  生成接口文档
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: com.dou.douaiagent.controller
+# knife4j 生成接口文档
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
