@@ -1,13 +1,18 @@
 package com.dou.douaiagent.app;
 
+import com.dou.douaiagent.advisor.MyLoggerAdvisor;
+import com.dou.douaiagent.advisor.SensitiveWordsAdvisor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.InMemoryChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY;
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_RETRIEVE_SIZE_KEY;
@@ -34,7 +39,9 @@ public class LoveApp {
         chatClient = ChatClient.builder(dashscopeChatModel)//初始化指定的chatModel
                 .defaultSystem(SYSTEM_PROMPT)//设置系统提示词
                 .defaultAdvisors(//增加advisor拦截器
-                        MessageChatMemoryAdvisor.builder(chatMemory).build()
+                        MessageChatMemoryAdvisor.builder(chatMemory).order(2).build(),
+                        new MyLoggerAdvisor(),
+                        new SensitiveWordsAdvisor()
                 )
                 .build();
     }
@@ -75,5 +82,30 @@ public class LoveApp {
         String content = chatResponse.getResult().getOutput().getText();
         log.info("content: {}", content);
         return content;
+    }
+
+
+    record LoveReport(String title, List<String> suggestions){
+
+    }
+
+    /**
+     * AI 恋爱报告功能（实战结构化输出）
+     * @param message
+     * @param chatId
+     * @return
+     */
+    public LoveReport doChatWhitReport(String message, String chatId){
+        LoveReport loveReport = chatClient
+                .prompt()
+                .system(SYSTEM_PROMPT + "每次对话后要生成恋爱对话报告，标题为{用户名}的恋爱报告，内容为建议列表")
+                .user(message)//设置用户提示词
+                .advisors(advisor -> advisor.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
+                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))//这里的10条是关联上下文的会话条数
+                .call()
+                .entity(LoveReport.class);
+
+        log.info("loveReport: {}", loveReport);
+        return loveReport;
     }
 }

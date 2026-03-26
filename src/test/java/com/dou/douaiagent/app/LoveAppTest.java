@@ -32,4 +32,17 @@ class LoveAppTest {
         Assertions.assertNotNull(anwser);
 
     }
+
+    @Test
+    void doChatWhitReport(){
+        String chat_id = UUID.randomUUID().toString();
+        String message = "你好，我是程序员逗哥,我的另一半是“踏雪无双”，我可爱死她了，但是我不知道怎么追求她";
+        try {
+            LoveApp.LoveReport loveReport = loveApp.doChatWhitReport(message, chat_id);
+            Assertions.assertNotNull(loveReport);
+        }catch(Exception e){
+            System.out.println(e.getMessage());
+        }
+
+    }
 }
