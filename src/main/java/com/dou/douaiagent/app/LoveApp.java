@@ -1,14 +1,17 @@
 package com.dou.douaiagent.app;
 
+
+
 import com.dou.douaiagent.advisor.MyLoggerAdvisor;
 import com.dou.douaiagent.advisor.SensitiveWordsAdvisor;
 import com.dou.douaiagent.chatmemory.InRedisChatMemory;
+import com.dou.douaiagent.prompt.SystemPrompt;
+import com.dou.douaiagent.prompt.UserPrompt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.memory.InMemoryChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -24,12 +27,9 @@ import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvis
 public class LoveApp {
 
     private final ChatClient chatClient;
+    private final SystemPrompt systemPrompt;
 
-    private final String SYSTEM_PROMPT = "你是精通两性心理、高情商聊天、情感升温的顶级恋爱大师，" +
-            "擅长根据不同场景、性格、关系阶段，" +
-            "给出自然不油腻、真诚不尴尬的聊天话术与行动建议，" +
-            "核心原则：不舔、不尬、不油腻，舒适拉近距离，精准戳中好感点。";
-
+    private final UserPrompt userPrompt;
 
     /**
      * 初始话 chatClient  使用框架中的InMemoeryChatMemory
@@ -59,11 +59,32 @@ public class LoveApp {
      * @param redisTemplate Redis模板
      * @param objectMapper JSON工具
      */
-    public LoveApp(ChatModel dashscopeChatModel, RedisTemplate<String, String> redisTemplate, ObjectMapper objectMapper) {
+//    public LoveApp(ChatModel dashscopeChatModel, RedisTemplate<String, String> redisTemplate, ObjectMapper objectMapper,
+//                   @Value("classpath:/prompts/systemPromptTemplate") Resource systemResource) throws IOException {
+//        this.systemPromptText = systemResource.getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+//        log.info("System prompt loaded, length={}", systemPromptText.length());
+//
+//        //初始化基于内存的对话记忆
+//        ChatMemory chatMemory = new InRedisChatMemory(redisTemplate, objectMapper);
+//        chatClient = ChatClient.builder(dashscopeChatModel)//初始化指定的chatModel
+//                .defaultSystem(systemPromptText)//设置系统提示词
+//                .defaultAdvisors(//增加advisor拦截器
+//                        MessageChatMemoryAdvisor.builder(chatMemory).order(2).build(),
+//                        new MyLoggerAdvisor(),
+//                        new SensitiveWordsAdvisor()
+//                )
+//                .build();
+//    }
+
+    public LoveApp(ChatModel dashscopeChatModel, RedisTemplate<String, String> redisTemplate,
+                   ObjectMapper objectMapper, SystemPrompt systemPrompt, UserPrompt userPrompt) {
+        this.systemPrompt = systemPrompt;
+        this.userPrompt = userPrompt;
+
         //初始化基于内存的对话记忆
         ChatMemory chatMemory = new InRedisChatMemory(redisTemplate, objectMapper);
         chatClient = ChatClient.builder(dashscopeChatModel)//初始化指定的chatModel
-                .defaultSystem(SYSTEM_PROMPT)//设置系统提示词
+                .defaultSystem(systemPrompt.getSystemPromptText())//设置系统提示词
                 .defaultAdvisors(//增加advisor拦截器
                         MessageChatMemoryAdvisor.builder(chatMemory).order(2).build(),
                         new MyLoggerAdvisor(),
@@ -122,10 +143,11 @@ public class LoveApp {
      * @return
      */
     public LoveReport doChatWhitReport(String message, String chatId){
+
         LoveReport loveReport = chatClient
                 .prompt()
-                .system(SYSTEM_PROMPT + "每次对话后要生成恋爱对话报告，标题为{用户名}的恋爱报告，内容为建议列表")
-                .user(message)//设置用户提示词
+                .system(systemPrompt.getSystemPromptText())
+                .user(userPrompt.getUserPrompt(message))//设置用户提示词
                 .advisors(advisor -> advisor.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))//这里的10条是关联上下文的会话条数
                 .call()
