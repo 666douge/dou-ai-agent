@@ -2,14 +2,16 @@ package com.dou.douaiagent.app;
 
 import com.dou.douaiagent.advisor.MyLoggerAdvisor;
 import com.dou.douaiagent.advisor.SensitiveWordsAdvisor;
+import com.dou.douaiagent.chatmemory.InRedisChatMemory;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
-import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.InMemoryChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -21,21 +23,45 @@ import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvis
 @Slf4j
 public class LoveApp {
 
-    private  final ChatClient chatClient;
+    private final ChatClient chatClient;
 
-    private  final String SYSTEM_PROMPT = "你是精通两性心理、高情商聊天、情感升温的顶级恋爱大师，擅长根据不同场景、性格、关系阶段，" +
-            "给出自然不油腻、真诚不尴尬的聊天话术与行动建议，核心原则：不舔、不尬、不油腻，舒适拉近距离，精准戳中好感点。";
+    private final String SYSTEM_PROMPT = "你是精通两性心理、高情商聊天、情感升温的顶级恋爱大师，" +
+            "擅长根据不同场景、性格、关系阶段，" +
+            "给出自然不油腻、真诚不尴尬的聊天话术与行动建议，" +
+            "核心原则：不舔、不尬、不油腻，舒适拉近距离，精准戳中好感点。";
 
 
     /**
-     * 初始话 chatClient
+     * 初始话 chatClient  使用框架中的InMemoeryChatMemory
      * 2、也可以指定模型创建chatclient，下面就是这种方式。
      * 以阿里云百炼 的dashscopeChatModel为例
      * @param dashscopeChatModel 或千问 qwenChatModel
      */
-    public LoveApp(ChatModel dashscopeChatModel) {
+//    public LoveApp(ChatModel dashscopeChatModel) {
+//        //初始化基于内存的对话记忆
+//        ChatMemory chatMemory = new InMemoryChatMemory();
+//        chatClient = ChatClient.builder(dashscopeChatModel)//初始化指定的chatModel
+//                .defaultSystem(SYSTEM_PROMPT)//设置系统提示词
+//                .defaultAdvisors(//增加advisor拦截器
+//                        MessageChatMemoryAdvisor.builder(chatMemory).order(2).build(),
+//                        new MyLoggerAdvisor(),
+//                        new SensitiveWordsAdvisor()
+//                )
+//                .build();
+//    }
+
+
+    /**
+     * 初始话 chatClient，使用redis持久化对话消息
+     * 2、也可以指定模型创建chatclient，下面就是这种方式。
+     * 以阿里云百炼 的dashscopeChatModel为例
+     * @param dashscopeChatModel 或千问 qwenChatModel
+     * @param redisTemplate Redis模板
+     * @param objectMapper JSON工具
+     */
+    public LoveApp(ChatModel dashscopeChatModel, RedisTemplate<String, String> redisTemplate, ObjectMapper objectMapper) {
         //初始化基于内存的对话记忆
-        ChatMemory chatMemory = new InMemoryChatMemory();
+        ChatMemory chatMemory = new InRedisChatMemory(redisTemplate, objectMapper);
         chatClient = ChatClient.builder(dashscopeChatModel)//初始化指定的chatModel
                 .defaultSystem(SYSTEM_PROMPT)//设置系统提示词
                 .defaultAdvisors(//增加advisor拦截器
