@@ -12,11 +12,8 @@ import java.nio.charset.Charset;
 @Slf4j
 public class SystemPrompt {
 
-    private final ResourcePatternResolver resourcePatternResolver;
-
-    public SystemPrompt(ResourcePatternResolver resourcePatternResolver){
-        this.resourcePatternResolver = resourcePatternResolver;
-    }
+    @jakarta.annotation.Resource
+    private  ResourcePatternResolver resourcePatternResolver;
 
 
     public String getSystemPromptText() {
