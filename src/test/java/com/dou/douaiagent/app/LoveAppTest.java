@@ -45,4 +45,14 @@ class LoveAppTest {
         }
 
     }
+
+
+    @Test
+    void testChatWithRag(){
+        String chat_id = UUID.randomUUID().toString();
+        String message = "我已经结婚了，但是婚后关系不太亲密，怎么办？";
+        String anwser = loveApp.doChatWithRag(message, chat_id);
+    }
+
+
 }

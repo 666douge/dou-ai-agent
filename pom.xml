@@ -111,6 +111,13 @@
             <artifactId>commons-pool2</artifactId>
         </dependency>
 
+        <!-- markdown文件格式解析器 -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-markdown-document-reader</artifactId>
+            <version>2.0.0-M3</version>
+        </dependency>
+
         <!-- Coze Spring AI Starter -->
         <!-- <dependency>
             <groupId>com.coze</groupId>
