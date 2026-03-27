@@ -1,38 +1,25 @@
 package com.dou.douaiagent.prompt;
 
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.prompt.PromptTemplate;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.util.Map;
 
 @Component
 @Slf4j
 public class UserPrompt {
 
-    @Value("classpath:/prompts/userFixPrompt")
-    private Resource userResouce;
+    private final ResourcePatternResolver resourcePatternResolver;
 
-    private String userPromptString;
-
-    @PostConstruct
-    void init() throws IOException {
-        if (userResouce == null) {
-            log.error("userResouce is null! Check: 1) file exists at src/main/resources/prompts/userFixPrompt  2) no 'new UserPrompt()' call bypassing Spring");
-            throw new IllegalStateException("userResouce is null");
-        }
-        if (!userResouce.exists()) {
-            log.error("userResouce exists but file not found on classpath: {}", userResouce);
-            throw new IllegalStateException("resource file not found: " + userResouce);
-        }
-        this.userPromptString = userResouce.getContentAsString(StandardCharsets.UTF_8);
-        log.info("user prompt loaded, length={}", userPromptString.length());
+    public UserPrompt(ResourcePatternResolver resourcePatternResolver) {
+        this.resourcePatternResolver = resourcePatternResolver;
     }
+
 
     /**
      * PromptTemplate 提示词模版
@@ -40,8 +27,19 @@ public class UserPrompt {
      * @return
      */
     public String getUserPrompt(String userMessage){
-        PromptTemplate promptTemplate = new PromptTemplate(userPromptString);
-        //return promptTemplate.render(Map.of("question", userMessage,"userName","逗哥"));
-        return promptTemplate.render(Map.of("question", userMessage));
+        try {
+            Resource[] resources = resourcePatternResolver
+                    .getResources("classpath:/prompts/userFixPrompt");
+
+            if(resources != null && resources.length >= 1){
+                String content = resources[0].getContentAsString(Charset.defaultCharset());
+                PromptTemplate promptTemplate = new PromptTemplate(content);
+                //return promptTemplate.render(Map.of("question", userMessage,"userName","逗哥"));
+                return promptTemplate.render(Map.of("question", userMessage));
+            }
+            throw new RuntimeException("用户提示词模板中的内容为空，请检查内容是否正确配置！");
+        } catch (IOException e) {
+            throw new RuntimeException("加载用户提示词模板失败：" + e);
+        }
     }
 }
