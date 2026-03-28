@@ -4,6 +4,13 @@ spring:
   profiles:
     active: local
 # 这里的local实际引用的 application-local.yml中配置的参数
+  ai:
+  vectorstore:
+    pgvector:
+    index-type: HNSW
+    distance-type: COSINE_DISTANCE
+    dimensions: 1536
+    max-document-batch-size: 10000 # Optional: Maximum number of documents per batch
 
 server:
   port: 8123

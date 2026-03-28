@@ -171,6 +171,9 @@ public class LoveApp {
     @Resource
     private Advisor loveAppRagCloudAdvisor;
 
+    @Resource
+    private VectorStore loveAppPgVectorVectorStore;
+
     /**
      * AI 基础对话（支持多轮对话记忆）
      * @param message
@@ -185,9 +188,11 @@ public class LoveApp {
                         .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))//这里的10条是关联上下文的会话条数
                 .advisors(new MyLoggerAdvisor())
                 //应用 RAG 知识库问答
-                .advisors(new QuestionAnswerAdvisor(loveAppVectorStore))
+                //.advisors(new QuestionAnswerAdvisor(loveAppVectorStore))
                 //应用 RAG 检索增强服务
                 //.advisors(loveAppRagCloudAdvisor)
+                //应用pg数据库检索增加服务，使用到了pgvector插件
+                .advisors(new QuestionAnswerAdvisor(loveAppPgVectorVectorStore))
                 .call()
                 .chatResponse();
 
