@@ -7,6 +7,7 @@ import com.dou.douaiagent.advisor.SensitiveWordsAdvisor;
 import com.dou.douaiagent.chatmemory.InRedisChatMemory;
 import com.dou.douaiagent.prompt.SystemPrompt;
 import com.dou.douaiagent.prompt.UserPrompt;
+import com.dou.douaiagent.rag.LoveAppRagCustomAdvisorFactory;
 import com.dou.douaiagent.rag.queryrewriter.QueryRewriter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
@@ -195,13 +196,16 @@ public class LoveApp {
                 .advisors(advisor -> advisor.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))//这里的10条是关联上下文的会话条数
                 .advisors(new MyLoggerAdvisor())
-                //应用 RAG 知识库问答
+                //应用 RAG 知识库问答，基于本地知识库（内存中加载了文档）
                 //.advisors(new QuestionAnswerAdvisor(loveAppVectorStore))
                 //应用 RAG 检索增强服务
                 //.advisors(loveAppRagCloudAdvisor)
                 //应用pg数据库检索增加服务，使用到了pgvector插件
-                .advisors(new QuestionAnswerAdvisor(loveAppPgVectorVectorStore))
-                //调用自定义的 检索增强顾问
+                //.advisors(new QuestionAnswerAdvisor(loveAppPgVectorVectorStore))
+                //调用自定义的 检索增强顾问，可以通过增加过滤条件提高返回准确度
+                .advisors(
+                        LoveAppRagCustomAdvisorFactory.createLoveAppRagCustomAdvisor(loveAppPgVectorVectorStore, "单身")
+                )
                 .call()
                 .chatResponse();
 
