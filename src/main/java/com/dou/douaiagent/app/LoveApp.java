@@ -192,7 +192,8 @@ public class LoveApp {
         ChatResponse chatResponse = chatClient
                 .prompt()
                 //使用改写后的查询
-                .user(rewriteenMessage)//设置用户提示词
+//                .user(message)//设置用户提示词
+                .user(rewriteenMessage)
                 .advisors(advisor -> advisor.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))//这里的10条是关联上下文的会话条数
                 .advisors(new MyLoggerAdvisor())
@@ -204,7 +205,10 @@ public class LoveApp {
                 //.advisors(new QuestionAnswerAdvisor(loveAppPgVectorVectorStore))
                 //调用自定义的 检索增强顾问，可以通过增加过滤条件提高返回准确度
                 .advisors(
-                        LoveAppRagCustomAdvisorFactory.createLoveAppRagCustomAdvisor(loveAppPgVectorVectorStore, "单身")
+                        //支持多扩展查询 或 查询重写
+                        //LoveAppRagCustomAdvisorFactory.createLoveAppRagCustomAdvisor(loveAppPgVectorVectorStore, "已婚", chatClient)
+                        //未处理多扩展查询 或 查询重写
+                        LoveAppRagCustomAdvisorFactory.createLoveAppRagCustomAdvisor(loveAppPgVectorVectorStore, "已婚")
                 )
                 .call()
                 .chatResponse();
