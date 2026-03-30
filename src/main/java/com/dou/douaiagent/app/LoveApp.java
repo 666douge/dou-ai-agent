@@ -7,6 +7,7 @@ import com.dou.douaiagent.advisor.SensitiveWordsAdvisor;
 import com.dou.douaiagent.chatmemory.InRedisChatMemory;
 import com.dou.douaiagent.prompt.SystemPrompt;
 import com.dou.douaiagent.prompt.UserPrompt;
+import com.dou.douaiagent.rag.queryrewriter.QueryRewriter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -174,6 +175,9 @@ public class LoveApp {
     @Resource
     private VectorStore loveAppPgVectorVectorStore;
 
+    @Resource
+    private QueryRewriter queryRewriter;
+
     /**
      * AI 基础对话（支持多轮对话记忆）
      * @param message
@@ -181,9 +185,13 @@ public class LoveApp {
      * @return
      */
     public String doChatWithRag(String message, String chatId){
+
+        String rewriteenMessage = queryRewriter.doQueryRewrite(message);
+
         ChatResponse chatResponse = chatClient
                 .prompt()
-                .user(message)//设置用户提示词
+                //使用改写后的查询
+                .user(rewriteenMessage)//设置用户提示词
                 .advisors(advisor -> advisor.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))//这里的10条是关联上下文的会话条数
                 .advisors(new MyLoggerAdvisor())
@@ -193,6 +201,7 @@ public class LoveApp {
                 //.advisors(loveAppRagCloudAdvisor)
                 //应用pg数据库检索增加服务，使用到了pgvector插件
                 .advisors(new QuestionAnswerAdvisor(loveAppPgVectorVectorStore))
+                //调用自定义的 检索增强顾问
                 .call()
                 .chatResponse();
 
