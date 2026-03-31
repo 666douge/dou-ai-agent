@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Spring AI 框架调用 AI 大模型
+ * 由于每次启动服务都会执行这个类，先把调用模型这块给注释掉
  */
 @Component
 public class SpringAIAiInvoke implements CommandLineRunner {
@@ -18,9 +19,9 @@ public class SpringAIAiInvoke implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        AssistantMessage assistantMessage = dashScopeChatModel.call(new Prompt("你好，我是逗哥！"))
+        /*AssistantMessage assistantMessage = dashScopeChatModel.call(new Prompt("你好，我是逗哥！"))
                 .getResult().getOutput();
-        System.out.println(assistantMessage.getText());
+        System.out.println(assistantMessage.getText());*/
 
     }
 }
