@@ -14,8 +14,9 @@ import org.springframework.ai.tool.annotation.ToolParam;
 import java.io.IOException;
 
 public class PDFGenerationTool {
-
-    @Tool(description = "Generate a PDF file with given content")
+    //通常情况下，spring ai框架中调用工具后，会将获取到的返回结果再传给大模型进行处理，最后才由大模型返回结果
+    //returnDirect 设置为 true后，调用工具生成pdf完成后，不用在请求大模型，直接返回
+    @Tool(description = "Generate a PDF file with given content", returnDirect = true)
     public String generatePDF(
             @ToolParam(description = "Name of the file to save the generated PDF") String fileName,
             @ToolParam(description = "Content to be included in the PDF") String content) {

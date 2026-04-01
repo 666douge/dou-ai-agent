@@ -34,3 +34,8 @@ knife4j:
   enable: true
   setting:
     language: zh_cn
+
+# mybatis-plus 框架中 实体字段与库表字段一致，不需要框架默认拆分字段如username 拆成user_name
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: false

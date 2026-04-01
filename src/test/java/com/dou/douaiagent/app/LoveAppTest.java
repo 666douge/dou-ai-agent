@@ -77,7 +77,8 @@ class LoveAppTest {
         //testMessage("保存我的恋爱档案为文件，不用参考模板，直接保存为txt格式的文件即可");
 
         // 测试 PDF 生成
-       testMessage("生成一份‘七夕约会计划’PDF，包含餐厅预订、活动流程和礼物清单");
+       //testMessage("生成一份‘七夕约会计划’PDF，包含餐厅预订、活动流程和礼物清单");
+        testMessage("查找王文京的个人信息，并保存到数据库中（不是保存到文件）");
     }
 
     private void testMessage(String message) {

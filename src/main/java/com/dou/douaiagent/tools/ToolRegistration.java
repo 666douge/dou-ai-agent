@@ -1,5 +1,7 @@
 package com.dou.douaiagent.tools;
 
+import com.dou.douaiagent.mapper.LoveAppMapper;
+import jakarta.annotation.Resource;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbacks;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +14,9 @@ public class ToolRegistration {
     @Value("${search-api.api-key}")
     private String apikey;
 
+    @Resource
+    private LoveAppMapper lovaAppMapper;
+
     @Bean
     public ToolCallback[] alltools(){
       FileOperationTool fileOperationTool = new FileOperationTool();
@@ -20,12 +25,14 @@ public class ToolRegistration {
       TerminalOperationTool terminalOperationTool = new TerminalOperationTool();
       ResourceDownloadTool resourceDownloadTool = new ResourceDownloadTool();
       PDFGenerationTool pdfGenerationTool = new PDFGenerationTool();
+      PGSqlOperationTool pgSqlOperationTool = new PGSqlOperationTool(lovaAppMapper);
       return ToolCallbacks.from(fileOperationTool,
               webSearchTool,
               webScrapingTool,
               terminalOperationTool,
               resourceDownloadTool,
-              pdfGenerationTool);
+              pdfGenerationTool,
+              pgSqlOperationTool);
 
     }
 
