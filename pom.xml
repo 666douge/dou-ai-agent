@@ -167,6 +167,13 @@
             <scope>compile</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-mcp-client-spring-boot-starter</artifactId>
+            <version>1.0.0-M6</version>
+        </dependency>
+
+
 
         <!-- Coze Spring AI Starter -->
         <!-- <dependency>
@@ -175,7 +182,6 @@
             <version>0.0.13</version>
         </dependency> -->
     </dependencies>
-
 
     <build>
         <resources>
