@@ -167,6 +167,7 @@
             <scope>compile</scope>
         </dependency>
 
+        <!-- Spring AI MCP Client的依赖-->
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-mcp-client-spring-boot-starter</artifactId>
