@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: dou-image-search-mcp-server
+  profiles:
+    active: sse,local
+
+server:
+  port: 8127

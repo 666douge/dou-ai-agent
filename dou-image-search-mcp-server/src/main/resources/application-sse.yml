@@ -1,0 +1,14 @@
+# Using spring-ai-starter-mcp-server
+spring:
+  ai:
+    mcp:
+      server:
+        name: dou-image-search-mcp-server
+        version: 0.0.1
+        type: SYNC
+        #sse
+        stdio: false
+#下面的配置不需要，因为要用web端启动服务（启动后需要一直运行着），供外部访问
+#  main:
+ #   web-application-type: none
+ #   banner-mode: off
