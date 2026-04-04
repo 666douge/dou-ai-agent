@@ -15,7 +15,6 @@ public class DouImageSearchMcpServerApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(DouImageSearchMcpServerApplication.class, args);
-        new Scanner(System.in).nextLine();
     }
 
     @Bean
