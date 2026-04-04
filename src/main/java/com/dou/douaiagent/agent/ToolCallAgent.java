@@ -19,6 +19,7 @@ import org.springframework.ai.model.tool.ToolExecutionResult;
 import org.springframework.ai.tool.ToolCallback;
 
 import java.util.List;
+import java.util.Scanner;
 import java.util.stream.Collectors;
 
 /**
@@ -74,6 +75,9 @@ public class ToolCallAgent extends ReActAgent{
 
         //2、调用AI大模型，获取模型调用结果
         List<Message> messageList = getMessageList();
+        //检查是否存在有需要用户介入回答的问题
+        checkIfAskHuman(messageList);
+
         //传入chatOptions的作用是告诉Spring AI由我们来手工执行工具
         Prompt prompt = new Prompt(messageList, chatOptions);
         try {
@@ -120,6 +124,40 @@ public class ToolCallAgent extends ReActAgent{
             getMessageList().add(new AssistantMessage("处理时遇到了错误: " + e.getMessage()));
             return false;
         }
+    }
+
+    /**
+     * 增加人工介入 ask_human
+     * @param messageList
+     * @return
+     */
+    protected boolean checkIfAskHuman(List<Message> messageList){
+        Message message = CollUtil.getLast(messageList);
+        for(Message curMessage : messageList){
+            if(curMessage instanceof AssistantMessage){
+                message = curMessage;
+            }
+        }
+        if(message instanceof AssistantMessage){
+            String context = message.getText();
+            if(StrUtil.isNotBlank(context) && context.contains("[ASK_USER]")){
+                //提取问题
+                String question = context.substring(context.indexOf("[ASK_USER]") + 10);
+                //向用户输出问题
+                System.out.println("智能体需要你的帮助：" + question);
+
+                //获取用户输入
+                Scanner scanner = new Scanner(System.in);
+                String userAnswer = scanner.nextLine();
+
+                //添加用户回答到消息列表
+                UserMessage userMessage = new UserMessage("用户回答：" + userAnswer);
+                getMessageList().add(userMessage);
+                //继续思考
+                return true;
+            }
+        }
+        return true;
     }
 
     /**

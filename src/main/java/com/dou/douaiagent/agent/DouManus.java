@@ -25,7 +25,8 @@ public class DouManus extends  ToolCallAgent{
                 "or combination of tools. For complex tasks, you can break down the problem and use " +
                 "different tools step by step to solve it. After using each tool, clearly explain the " +
                 "execution results and suggest the next steps." +
-                "If you want to stop the interaction at any point, use the `terminate` tool/function call.";
+                "If you want to stop the interaction at any point, use the `terminate` tool/function call." +
+                "If you cannot understand the question, you can append the keyword '[ASK_USER]' to it to ask a human for help";
         this.setNextStepPrompt(NEXT_STEP_PROMPT);
         this.setMaxSteps(15);
         //初始化ChatClient
