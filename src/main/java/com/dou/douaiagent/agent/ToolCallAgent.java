@@ -72,7 +72,7 @@ public class ToolCallAgent extends ReActAgent{
             getMessageList().add(userMessage);
         }
 
-        //2、调用AI大模型，获取工具的调用结果
+        //2、调用AI大模型，获取模型调用结果
         List<Message> messageList = getMessageList();
         //传入chatOptions的作用是告诉Spring AI由我们来手工执行工具
         Prompt prompt = new Prompt(messageList, chatOptions);
@@ -85,20 +85,27 @@ public class ToolCallAgent extends ReActAgent{
 
             //记录响应，用于等下 Act
             this.toolCallChatResponse = chatResponse;
-            //3、解析工具调用结果，获取要调用的工具
-            //助手消息
+
+            //3、解析模型调用结果，获取要调用的工具
+            //助手消息，调用大模型返回的消息，返回了大模型输出的提示信息和要调用的工具
             AssistantMessage assistantMessage = chatResponse.getResult().getOutput();
             //获取要调用的工具列表
             List<AssistantMessage.ToolCall> toolCallList = assistantMessage.getToolCalls();
-            //输出提示信息
+            //本次调用模型输出提示信息
             String assitansText = assistantMessage.getText();
+
+            if(isStuck(assitansText)){
+                log.info("==观察到重复响应。考虑新策略，避免重复已尝试过的无效路径。==");
+                handleStuckState();
+                return false;
+            }
+
             log.info(getName() + "的思考： " + assitansText);
             log.info(getName() + "选择了" + toolCallList.size() + "个工具来使用");
             String toolcallinfo = toolCallList.stream().map(toolCall -> String.format("工具名称：%s，参数%s", toolCall.name(), toolCall.arguments()))
                     .collect(Collectors.joining("\n"));
 
             log.info("调用的工具： \n" + toolcallinfo);
-
             //如果不需要调用工具，返回false
             if(toolCallList.isEmpty()){
                 //只有不调用工具的时候，才需要手工记录助手消息
@@ -113,6 +120,42 @@ public class ToolCallAgent extends ReActAgent{
             getMessageList().add(new AssistantMessage("处理时遇到了错误: " + e.getMessage()));
             return false;
         }
+    }
+
+    /**
+     * 检查代理是否进入死循环，通过大模型返回的消息和 历史上下文判断是否出现重复的提示词（一定次数限制）
+     *
+     * @param currenResultAssistantMessageText
+     * @return
+     */
+    protected boolean isStuck(String currenResultAssistantMessageText){
+        List<Message> messageList = getMessageList();
+        //如果上下文消息中少于设定的最大可重复条数的阈值，说明任务才刚开始，不用校验
+        if(messageList.size() < this.getMaxDuplicateCounts()){
+            return false;
+        }
+        //校验当前提示词在历史上下文中出现的次数
+        int duplicateCount = 0;
+        log.info("==========currenResultAssistantMessageText======: " + currenResultAssistantMessageText);
+        for(Message message : messageList){
+            if(message instanceof AssistantMessage){
+                log.info("==========message.getText======: " + message.getText());
+                if(message.getText().equals(currenResultAssistantMessageText)){
+                    duplicateCount++;
+                }
+
+            }
+        }
+        return duplicateCount >= this.getMaxDuplicateCounts();
+    }
+
+    /**
+     * 检查到循环调佣后的处理方法
+     */
+    protected void handleStuckState(){
+        String stuckPrompt = "观察到重复响应。考虑新策略，避免重复已尝试过的无效路径。";
+        String nextPrompt = stuckPrompt + "\n" + (StrUtil.isBlank(this.getNextStepPrompt()) ? "" : this.getNextStepPrompt());
+        getMessageList().add(new AssistantMessage(nextPrompt));
     }
 
     /**

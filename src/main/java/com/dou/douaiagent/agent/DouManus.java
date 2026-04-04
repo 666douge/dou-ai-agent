@@ -27,11 +27,12 @@ public class DouManus extends  ToolCallAgent{
                 "execution results and suggest the next steps." +
                 "If you want to stop the interaction at any point, use the `terminate` tool/function call.";
         this.setNextStepPrompt(NEXT_STEP_PROMPT);
-        this.setMaxSteps(10);
+        this.setMaxSteps(15);
         //初始化ChatClient
         ChatClient chatClient = ChatClient.builder(dashscopeChatModel)
                 .defaultAdvisors(new MyLoggerAdvisor())
                 .build();
         this.setChatClient(chatClient);
+        this.setMaxDuplicateCounts(2);
     }
 }

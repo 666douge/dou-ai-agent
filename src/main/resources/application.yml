@@ -13,12 +13,12 @@ spring:
       max-document-batch-size: 10000 # Optional: Maximum number of documents per batch
     mcp: #mcp服务的配置
       client:
-        sse:
-          connections:
-            server1:
-              url: http://localhost:8127
-#        stdio: #因为是本地调用的，所以配置stdio模式
- #         servers-configuration: classpath:mcp-servers.json
+#        sse:
+ #         connections:
+  #          server1:
+   #           url: http://localhost:8127
+        stdio: #因为是本地调用的，所以配置stdio模式
+          servers-configuration: classpath:mcp-servers.json
 
 
 server:

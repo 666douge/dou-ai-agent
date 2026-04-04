@@ -39,6 +39,10 @@ public abstract class BaseAgent {
     //LLM 大模型
     private ChatClient chatClient;
 
+    //重复请求次数阈值（控制死循环）
+    private int maxDuplicateCounts;
+
+
     //memory 记忆（需要自主维护会话上下文）
     private List<Message> messageList = new ArrayList<>();
 
