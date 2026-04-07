@@ -1,292 +1,632 @@
 <template>
-  <div class="home-page">
-    <!-- 背景装饰 -->
-    <div class="bg-orb orb-1"></div>
-    <div class="bg-orb orb-2"></div>
-    <div class="bg-orb orb-3"></div>
+  <div class="home">
+    <!-- 背景层 -->
+    <canvas ref="gridCanvas" class="grid-canvas"></canvas>
+    <div class="noise-overlay"></div>
+    <div class="scanlines"></div>
 
-    <div class="home-content">
-      <!-- 标题区 -->
-      <header class="home-header">
-        <div class="header-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-            <line x1="9" y1="9" x2="9.01" y2="9"/>
-            <line x1="15" y1="9" x2="15.01" y2="9"/>
+    <!-- 粒子层 -->
+    <div class="particles" ref="particlesRef">
+      <span v-for="n in 18" :key="n" class="particle" :style="particleStyle(n)"></span>
+    </div>
+
+    <!-- 主内容 -->
+    <main class="content">
+
+      <!-- Hero 区 -->
+      <section class="hero">
+        <!-- Logo 标 -->
+        <div class="logo-mark" ref="logoRef">
+          <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+            <defs>
+              <linearGradient id="logoGrad" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#00f5ff"/>
+                <stop offset="100%" stop-color="#bf5af2"/>
+              </linearGradient>
+              <filter id="logoGlow">
+                <feGaussianBlur stdDeviation="3" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <polygon points="28,4 52,16 52,40 28,52 4,40 4,16" stroke="url(#logoGrad)" stroke-width="1.5" fill="none" filter="url(#logoGlow)"/>
+            <polygon points="28,12 44,20 44,36 28,44 12,36 12,20" stroke="url(#logoGrad)" stroke-width="1" fill="rgba(0,245,255,0.04)"/>
+            <text x="28" y="33" text-anchor="middle" font-family="monospace" font-size="14" font-weight="bold" fill="url(#logoGrad)">AI</text>
           </svg>
         </div>
-        <h1 class="home-title">AI 智能助手</h1>
-        <p class="home-subtitle">选择下方应用，开启智能对话之旅</p>
-      </header>
 
-      <!-- 应用卡片网格 -->
-      <div class="app-grid">
+        <!-- 主标题（带 glitch） -->
+        <h1 class="title-glitch" data-text="DOU AI AGENT">DOU AI AGENT</h1>
+
+        <!-- 副标题终端行 -->
+        <div class="terminal-line">
+          <span class="prompt">›</span>
+          <span class="cmd">select mode from intelligence</span>
+          <span class="cursor">_</span>
+        </div>
+
+        <!-- 标语 -->
+        <p class="tagline">超越想象 · 驾驭未来</p>
+      </section>
+
+      <!-- 应用入口区 -->
+      <section class="apps">
         <!-- AI 恋爱大师 -->
-        <div class="app-card card-love" @click="goTo('/love-app')">
-          <div class="card-bg-effect"></div>
-          <div class="card-top-bar bar-love"></div>
-          <div class="card-icon-wrap">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-            </svg>
-          </div>
-          <h2 class="card-title">AI 恋爱大师</h2>
-          <p class="card-desc">专业的情感顾问，为您解答恋爱中的困惑与问题</p>
-          <div class="card-footer">
-            <span class="card-tag tag-love">情感陪伴</span>
-            <span class="card-arrow">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"/>
-                <polyline points="12 5 19 12 12 19"/>
-              </svg>
-            </span>
+        <div class="card card-love" @click="goTo('/love-app')">
+          <div class="card-glow"></div>
+          <div class="card-inner">
+            <div class="card-header">
+              <div class="card-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+              </div>
+              <div class="card-status">
+                <span class="status-dot"></span>
+                <span class="status-text">ONLINE</span>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <h2 class="card-name">AI 恋爱大师</h2>
+              <p class="card-desc">深度情感引擎 · 精准共情算法<br>专业关系顾问 · 随时在线</p>
+            </div>
+
+            <div class="card-footer">
+              <span class="card-tag">EMOTION ENGINE v2.1</span>
+              <div class="card-enter">
+                <span>ENTER</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- AI 超级智能体 -->
-        <div class="app-card card-manus" @click="goTo('/manus-app')">
-          <div class="card-bg-effect"></div>
-          <div class="card-top-bar bar-manus"></div>
-          <div class="card-icon-wrap">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-            </svg>
-          </div>
-          <h2 class="card-title">AI 超级智能体</h2>
-          <p class="card-desc">强大的 AI 智能体，助您完成各类复杂任务</p>
-          <div class="card-footer">
-            <span class="card-tag tag-manus">智能助手</span>
-            <span class="card-arrow">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"/>
-                <polyline points="12 5 19 12 12 19"/>
-              </svg>
-            </span>
+        <div class="card card-manus" @click="goTo('/manus-app')">
+          <div class="card-glow"></div>
+          <div class="card-inner">
+            <div class="card-header">
+              <div class="card-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+              </div>
+              <div class="card-status">
+                <span class="status-dot"></span>
+                <span class="status-text">ONLINE</span>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <h2 class="card-name">AI 超级智能体</h2>
+              <p class="card-desc">多模态推理 · 自主任务规划<br>工具链编排 · 无限扩展</p>
+            </div>
+
+            <div class="card-footer">
+              <span class="card-tag">AGENT CORE v3.0</span>
+              <div class="card-enter">
+                <span>ENTER</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <!-- 底部信息 -->
-      <footer class="home-footer">
-        <span class="footer-dot"></span>
-        <span>Powered by Dou AI Agent</span>
-        <span class="footer-dot"></span>
+      <!-- 底部版权 -->
+      <footer class="footer">
+        <span>DOU AI AGENT</span>
+        <span class="sep">·</span>
+        <span>POWERED BY LARGE LANGUAGE MODEL</span>
       </footer>
-    </div>
+
+    </main>
   </div>
 </template>
 
 <script setup>
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
-const router = useRouter()
+const router  = useRouter()
+const gridCanvas = ref(null)
+const particlesRef = ref(null)
+let gridAnimId = null
 
-function goTo(path) {
-  router.push(path)
+function goTo(path) { router.push(path) }
+
+function particleStyle(n) {
+  const size   = 2 + (n % 3)
+  const delay  = (n * 0.37) % 3
+  const dur    = 4 + (n % 5)
+  const left   = ((n * 53.7) % 97).toFixed(1)
+  const top    = ((n * 41.3) % 92).toFixed(1)
+  const hue    = 180 + (n * 23) % 120
+  return {
+    width:  size + 'px',
+    height: size + 'px',
+    left:   left + '%',
+    top:    top  + '%',
+    background: `hsl(${hue}, 100%, 70%)`,
+    animationDelay: delay + 's',
+    animationDuration: dur + 's',
+  }
 }
+
+// ── 透视网格动画 ──
+function initGrid() {
+  const canvas = gridCanvas.value
+  if (!canvas) return
+  const ctx = canvas.getContext('2d')
+
+  function resize() {
+    canvas.width  = window.innerWidth
+    canvas.height = window.innerHeight
+  }
+  resize()
+  window.addEventListener('resize', resize)
+
+  let t = 0
+  function drawGrid() {
+    const w = canvas.width
+    const h = canvas.height
+    ctx.clearRect(0, 0, w, h)
+
+    // 透视参数
+    const horizon  = h * 0.42
+    const vanishX  = w * 0.5
+    const gridCols = 28
+    const gridRows = 18
+    const cellW    = w / gridCols
+    const cellH    = h * 0.06
+
+    ctx.lineWidth = 0.6
+
+    // 竖线（向消失点汇聚）
+    for (let i = 0; i <= gridCols; i++) {
+      const x = i * cellW
+      const alpha = Math.max(0, 0.18 - Math.abs(x - vanishX) / w * 0.18)
+      ctx.strokeStyle = `rgba(0,245,255,${alpha})`
+      ctx.beginPath()
+      ctx.moveTo(x, horizon)
+      ctx.lineTo(x < vanishX ? 0       : w, 0)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(x, horizon)
+      ctx.lineTo(x < vanishX ? 0       : w, h)
+      ctx.stroke()
+    }
+
+    // 横线（从地平线向下扩散）
+    const speed = 0.018
+    for (let j = 0; j <= gridRows; j++) {
+      const raw = j / gridRows
+      // 加速效果：底部间距大，顶部间距小
+      const compressed = Math.pow(raw, 1.6)
+      const y = horizon + (h - horizon) * compressed + (t * (1 + j * 0.3)) % (cellH * 1.5)
+      const clampedY  = Math.min(y, h)
+      const alpha     = Math.max(0, 0.14 - clampedY / h * 0.14)
+      const color     = clampedY > horizon
+        ? `rgba(0,245,255,${alpha})`
+        : `rgba(191,90,242,${alpha * 0.5})`
+      ctx.strokeStyle = color
+      ctx.beginPath()
+      ctx.moveTo(0,     clampedY)
+      ctx.lineTo(w,     clampedY)
+      ctx.stroke()
+    }
+
+    // 地平线光晕
+    const grad = ctx.createLinearGradient(0, horizon - 30, 0, horizon + 30)
+    grad.addColorStop(0,   'rgba(191,90,242,0)')
+    grad.addColorStop(0.5, 'rgba(191,90,242,0.12)')
+    grad.addColorStop(1,   'rgba(0,245,255,0)')
+    ctx.fillStyle = grad
+    ctx.fillRect(0, horizon - 30, w, 60)
+
+    t += speed
+    gridAnimId = requestAnimationFrame(drawGrid)
+  }
+
+  drawGrid()
+}
+
+onMounted(() => {
+  initGrid()
+})
+
+onUnmounted(() => {
+  if (gridAnimId) cancelAnimationFrame(gridAnimId)
+})
 </script>
 
 <style scoped>
-/* ── 页面容器 ── */
-.home-page {
+/* ════════════════════════════════════════════
+   变量 & 重置
+   ════════════════════════════════════════════ */
+.home {
+  --neon-cyan:   #00f5ff;
+  --neon-purple: #bf5af2;
+  --neon-pink:   #ff2d78;
+  --dark-bg:     #030308;
+  --glass-bg:    rgba(255,255,255,0.03);
+  --glass-border:rgba(255,255,255,0.08);
+
   min-height: 100dvh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  background: #0f0c29;
-  background: linear-gradient(135deg, #0f0c29 0%, #1b1f3a 50%, #201d3a 100%);
+  background: var(--dark-bg);
   position: relative;
   overflow: hidden;
+  font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, 'SF Mono', 'Fira Code', monospace;
+  color: #fff;
 }
 
-/* ── 背景光斑 ── */
-.bg-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
+/* ════════════════════════════════════════════
+   背景层
+   ════════════════════════════════════════════ */
+.grid-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
   pointer-events: none;
 }
 
-.orb-1 {
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%);
-  top: -120px;
-  right: -100px;
-  animation: orbFloat 8s ease-in-out infinite;
-}
-
-.orb-2 {
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(236, 72, 153, 0.18) 0%, transparent 70%);
-  bottom: -80px;
-  left: -80px;
-  animation: orbFloat 10s ease-in-out infinite reverse;
-}
-
-.orb-3 {
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.14) 0%, transparent 70%);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  animation: orbPulse 6s ease-in-out infinite;
-}
-
-@keyframes orbFloat {
-  0%, 100% { transform: translate(0, 0); }
-  50%       { transform: translate(-20px, 20px); }
-}
-
-@keyframes orbPulse {
-  0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
-  50%       { opacity: 1;   transform: translate(-50%, -50%) scale(1.15); }
-}
-
-/* ── 内容层 ── */
-.home-content {
-  position: relative;
+.noise-overlay {
+  position: fixed;
+  inset: 0;
   z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 48px;
-  max-width: 900px;
-  width: 100%;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  opacity: 0.5;
 }
 
-/* ── 标题区 ── */
-.home-header {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
+.scanlines {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.07) 2px,
+    rgba(0,0,0,0.07) 4px
+  );
 }
 
-.header-icon {
-  width: 72px;
-  height: 72px;
+/* ════════════════════════════════════════════
+   粒子
+   ════════════════════════════════════════════ */
+.particles {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  opacity: 0;
+  animation: particleFloat linear infinite;
+  box-shadow: 0 0 6px currentColor;
+}
+
+@keyframes particleFloat {
+  0%   { opacity: 0;    transform: translateY(0) scale(1); }
+  10%  { opacity: 0.7; }
+  90%  { opacity: 0.4; }
+  100% { opacity: 0;    transform: translateY(-60px) scale(0.3); }
+}
+
+/* ════════════════════════════════════════════
+   主内容
+   ════════════════════════════════════════════ */
+.content {
+  position: relative;
+  z-index: 10;
+  min-height: 100dvh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(8px);
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.2);
-  animation: headerIconIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  gap: 56px;
+  padding: 48px 24px;
 }
 
-.home-title {
-  font-size: clamp(28px, 5vw, 44px);
-  font-weight: 700;
+/* ════════════════════════════════════════════
+   Hero 区
+   ════════════════════════════════════════════ */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  animation: heroIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes heroIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Logo 标 */
+.logo-mark {
+  margin-bottom: 4px;
+  filter: drop-shadow(0 0 18px rgba(0,245,255,0.5));
+  animation: logoSpin 20s linear infinite;
+}
+
+@keyframes logoSpin {
+  from { filter: drop-shadow(0 0 18px rgba(0,245,255,0.5)) drop-shadow(0 0 40px rgba(191,90,242,0.3)); }
+  50%  { filter: drop-shadow(0 0 28px rgba(191,90,242,0.6)) drop-shadow(0 0 50px rgba(0,245,255,0.3)); }
+  to   { filter: drop-shadow(0 0 18px rgba(0,245,255,0.5)) drop-shadow(0 0 40px rgba(191,90,242,0.3)); }
+}
+
+/* Glitch 标题 */
+.title-glitch {
+  font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: clamp(36px, 8vw, 80px);
+  font-weight: 900;
+  letter-spacing: 8px;
   color: #fff;
-  letter-spacing: 3px;
-  animation: fadeUp 0.5s ease both 0.1s;
+  position: relative;
+  text-shadow:
+    0 0 10px rgba(0,245,255,0.8),
+    0 0 30px rgba(0,245,255,0.4),
+    0 0 60px rgba(0,245,255,0.2);
+  cursor: default;
+  user-select: none;
 }
 
-.home-subtitle {
+.title-glitch::before,
+.title-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  letter-spacing: 8px;
+}
+
+.title-glitch::before {
+  color: var(--neon-cyan);
+  animation: glitchA 4s infinite;
+  clip-path: polygon(0 20%, 100% 20%, 100% 50%, 0 50%);
+}
+
+.title-glitch::after {
+  color: var(--neon-pink);
+  animation: glitchB 4s infinite;
+  clip-path: polygon(0 55%, 100% 55%, 100% 80%, 0 80%);
+}
+
+@keyframes glitchA {
+  0%, 85%, 100% { transform: translate(0); opacity: 0; }
+  86%  { transform: translate(-4px, -1px); opacity: 0.9; }
+  88%  { transform: translate( 3px,  1px); opacity: 0.8; }
+  90%  { transform: translate( 0);         opacity: 0; }
+}
+
+@keyframes glitchB {
+  0%, 88%, 100% { transform: translate(0); opacity: 0; }
+  89%  { transform: translate( 4px,  1px); opacity: 0.9; }
+  91%  { transform: translate(-3px, -1px); opacity: 0.8; }
+  93%  { transform: translate( 0);         opacity: 0; }
+}
+
+/* 终端行 */
+.terminal-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 14px;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 1.5px;
+  padding: 6px 18px;
+  border: 1px solid rgba(0,245,255,0.12);
+  border-radius: 6px;
+  background: rgba(0,245,255,0.04);
+  backdrop-filter: blur(8px);
+}
+
+.prompt  { color: var(--neon-cyan); font-size: 18px; }
+.cmd     { color: rgba(255,255,255,0.6); }
+.cursor  {
+  color: var(--neon-cyan);
+  animation: blink 1.1s step-end infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* 标语 */
+.tagline {
   font-size: 15px;
-  color: rgba(255, 255, 255, 0.5);
-  letter-spacing: 1px;
-  animation: fadeUp 0.5s ease both 0.2s;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  margin-top: 4px;
+  animation: fadeUp 0.6s ease both 0.2s;
 }
 
-/* ── 应用网格 ── */
-.app-grid {
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ════════════════════════════════════════════
+   应用卡片区
+   ════════════════════════════════════════════ */
+.apps {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
+  gap: 20px;
   width: 100%;
+  max-width: 780px;
+  animation: cardsIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both 0.25s;
 }
 
-/* ── 应用卡片 ── */
-.app-card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
-  padding: 36px 30px 28px;
-  cursor: pointer;
+@keyframes cardsIn {
+  from { opacity: 0; transform: translateY(40px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── 单个卡片 ── */
+.card {
   position: relative;
-  overflow: hidden;
+  cursor: pointer;
+  border-radius: 20px;
+  padding: 2px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.3s ease;
+  animation: cardHoverIn 0.5s ease both;
+}
+
+.card:nth-child(1) { animation-delay: 0.3s; }
+.card:nth-child(2) { animation-delay: 0.42s; }
+
+@keyframes cardHoverIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.card:hover {
+  transform: translateY(-8px) scale(1.02);
+}
+
+.card-love:hover  { box-shadow: 0 0 40px rgba(255,45,120,0.25), 0 20px 60px rgba(0,0,0,0.5); }
+.card-manus:hover { box-shadow: 0 0 40px rgba(0,245,255,0.25),  0 20px 60px rgba(0,0,0,0.5); }
+
+/* 卡片外发光层 */
+.card-glow {
+  position: absolute;
+  inset: -1px;
+  border-radius: 21px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.card-love  .card-glow { background: linear-gradient(135deg, #ff2d78, #bf5af2); }
+.card-manus .card-glow { background: linear-gradient(135deg, #00f5ff, #bf5af2); }
+.card:hover .card-glow { opacity: 0.6; }
+
+/* 玻璃内容 */
+.card-inner {
+  background: rgba(3,3,8,0.85);
+  border-radius: 18px;
+  padding: 28px 26px 22px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  backdrop-filter: blur(16px);
-  transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-normal);
-  animation: cardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  gap: 16px;
+  height: 100%;
+  backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
 }
 
-.app-card:nth-child(1) { animation-delay: 0.15s; }
-.app-card:nth-child(2) { animation-delay: 0.25s; }
-
-.app-card:hover {
-  transform: translateY(-6px) scale(1.01);
-  border-color: rgba(255, 255, 255, 0.22);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-}
-
-/* 卡片顶部强调条 */
-.card-top-bar {
+.card-inner::before {
+  content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  border-radius: 24px 24px 0 0;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  border-radius: 18px 18px 0 0;
+}
+.card-love  .card-inner::before { background: linear-gradient(90deg, transparent, rgba(255,45,120,0.6), transparent); }
+.card-manus .card-inner::before { background: linear-gradient(90deg, transparent, rgba(0,245,255,0.6), transparent); }
+
+/* 卡片头部 */
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.bar-love  { background: linear-gradient(90deg, #ec4899, #f43f5e); }
-.bar-manus { background: linear-gradient(90deg, #3b82f6, #6366f1, #8b5cf6); }
-
-/* 卡片图标容器 */
-.card-icon-wrap {
-  width: 64px;
-  height: 64px;
-  border-radius: 20px;
+.card-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 4px;
-  transition: transform var(--transition-normal);
+  transition: transform 0.3s ease;
 }
 
-.app-card:hover .card-icon-wrap {
-  transform: scale(1.1) rotate(-4deg);
+.card-love  .card-icon {
+  background: rgba(255,45,120,0.12);
+  border: 1px solid rgba(255,45,120,0.25);
+  color: #ff2d78;
+  box-shadow: 0 0 20px rgba(255,45,120,0.15);
 }
 
-.card-love .card-icon-wrap {
-  background: linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(244, 63, 94, 0.15) 100%);
-  color: #fb7185;
-  border: 1px solid rgba(236, 72, 153, 0.25);
+.card-manus .card-icon {
+  background: rgba(0,245,255,0.08);
+  border: 1px solid rgba(0,245,255,0.2);
+  color: var(--neon-cyan);
+  box-shadow: 0 0 20px rgba(0,245,255,0.1);
 }
 
-.card-manus .card-icon-wrap {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(99, 102, 241, 0.15) 100%);
-  color: #818cf8;
-  border: 1px solid rgba(59, 130, 246, 0.25);
+.card:hover .card-icon {
+  transform: scale(1.1) rotate(-5deg);
 }
 
-.card-title {
-  font-size: 19px;
-  font-weight: 600;
+/* 状态指示 */
+.card-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #00ff88;
+  box-shadow: 0 0 8px #00ff88;
+  animation: statusPulse 2s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px #00ff88; }
+  50%       { opacity: 0.5; box-shadow: 0 0 3px #00ff88; }
+}
+
+.status-text {
+  font-family: 'SF Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.3);
+}
+
+/* 卡片正文 */
+.card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card-name {
+  font-size: 20px;
+  font-weight: 700;
   color: #fff;
   margin: 0;
   letter-spacing: 0.5px;
 }
 
 .card-desc {
-  font-size: 13.5px;
-  color: rgba(255, 255, 255, 0.48);
-  line-height: 1.65;
+  font-size: 13px;
+  color: rgba(255,255,255,0.38);
+  line-height: 1.7;
   margin: 0;
-  flex: 1;
 }
 
 /* 卡片底部 */
@@ -294,122 +634,105 @@ function goTo(path) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.05);
 }
 
 .card-tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 12px;
-  border-radius: var(--radius-full);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.3px;
+  font-family: 'SF Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.2);
 }
 
-.tag-love {
-  background: rgba(236, 72, 153, 0.15);
-  color: #fb7185;
-  border: 1px solid rgba(236, 72, 153, 0.25);
-}
-
-.tag-manus {
-  background: rgba(59, 130, 246, 0.15);
-  color: #818cf8;
-  border: 1px solid rgba(59, 130, 246, 0.25);
-}
-
-.card-arrow {
-  color: rgba(255, 255, 255, 0.3);
+.card-enter {
   display: flex;
-  transition: transform var(--transition-normal), color var(--transition-normal);
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
-.app-card:hover .card-arrow {
-  transform: translateX(4px);
-  color: rgba(255, 255, 255, 0.7);
+.card-love  .card-enter { color: #ff2d78; }
+.card-manus .card-enter { color: var(--neon-cyan); }
+
+.card:hover .card-enter {
+  opacity: 1;
+  transform: translateX(0);
 }
 
-/* ── 底部 ── */
-.home-footer {
+/* ════════════════════════════════════════════
+   底部
+   ════════════════════════════════════════════ */
+.footer {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: rgba(255, 255, 255, 0.3);
-  font-size: 12.5px;
-  letter-spacing: 0.5px;
-  animation: fadeUp 0.5s ease both 0.35s;
+  font-family: 'SF Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.15);
+  animation: fadeUp 0.5s ease both 0.5s;
 }
 
-.footer-dot {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-}
+.sep { opacity: 0.4; }
 
-/* ── 动画 ── */
-@keyframes headerIconIn {
-  from { opacity: 0; transform: scale(0.7); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes cardIn {
-  from { opacity: 0; transform: translateY(24px) scale(0.94); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* ── 响应式：平板 ── */
+/* ════════════════════════════════════════════
+   响应式
+   ════════════════════════════════════════════ */
 @media (max-width: 768px) {
-  .home-page {
-    padding: 32px 16px;
-    align-items: flex-start;
-    padding-top: 60px;
+  .content {
+    gap: 44px;
+    padding: 48px 16px 36px;
+    justify-content: flex-start;
+    padding-top: 72px;
   }
 
-  .app-grid {
-    gap: 18px;
+  .apps {
+    gap: 16px;
   }
 
-  .app-card {
-    padding: 28px 24px 22px;
+  .card-inner {
+    padding: 22px 20px 18px;
+    gap: 14px;
   }
 
-  .card-icon-wrap {
-    width: 56px;
-    height: 56px;
-  }
-
-  .home-content {
-    gap: 36px;
+  .card-icon {
+    width: 46px;
+    height: 46px;
   }
 }
 
-/* ── 响应式：手机单列 ── */
-@media (max-width: 580px) {
-  .app-grid {
+@media (max-width: 560px) {
+  .apps {
     grid-template-columns: 1fr;
+    max-width: 400px;
   }
 
-  .home-title {
-    letter-spacing: 1.5px;
+  .title-glitch {
+    letter-spacing: 4px;
+    font-size: 36px;
+  }
+
+  .terminal-line {
+    font-size: 12px;
+    padding: 5px 14px;
+  }
+
+  .tagline {
+    letter-spacing: 3px;
+    font-size: 13px;
   }
 }
 
-/* ── 响应式：超小手机 ── */
 @media (max-width: 380px) {
-  .home-page {
-    padding: 28px 12px;
-    padding-top: 48px;
-  }
-
-  .app-card {
-    padding: 24px 20px 18px;
+  .content {
+    padding: 52px 12px 28px;
+    gap: 36px;
   }
 }
 </style>
