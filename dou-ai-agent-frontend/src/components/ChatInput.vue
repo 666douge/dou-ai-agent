@@ -1,30 +1,42 @@
 <template>
-  <div class="chat-input-wrapper">
-    <div class="chat-input-container">
-      <textarea
-        ref="textareaRef"
-        v-model="inputText"
-        class="chat-input"
-        :placeholder="placeholder"
-        :disabled="disabled"
-        @keydown.enter.exact.prevent="handleSend"
-        @input="autoResize"
-      ></textarea>
+  <div class="input-area">
+    <div class="input-row">
+      <!-- 输入框 -->
+      <div class="input-field">
+        <textarea
+          ref="textareaRef"
+          v-model="inputText"
+          class="text-input"
+          :placeholder="placeholder"
+          :disabled="disabled"
+          rows="1"
+          @keydown.enter.exact.prevent="handleSend"
+          @input="autoResize"
+        ></textarea>
+      </div>
+
+      <!-- 发送按钮 -->
       <button
         class="send-btn"
-        :class="{ 'disabled': disabled || !inputText.trim() }"
-        :disabled="disabled || !inputText.trim()"
+        :class="{ 'is-active': canSend }"
+        :disabled="!canSend"
         @click="handleSend"
+        title="发送"
       >
-        <span class="send-icon">↑</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
       </button>
     </div>
-    <div class="input-hint">按 Enter 发送，Shift + Enter 换行</div>
+
+    <!-- 提示文字 -->
+    <p class="input-tip">按 Enter 发送，Shift + Enter 换行</p>
   </div>
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 
 const props = defineProps({
   placeholder: {
@@ -42,13 +54,14 @@ const emit = defineEmits(['send'])
 const inputText = ref('')
 const textareaRef = ref(null)
 
+const canSend = computed(() => {
+  return inputText.value.trim().length > 0 && !props.disabled
+})
+
 function handleSend() {
-  const text = inputText.value.trim()
-  if (!text || props.disabled) return
-
-  emit('send', text)
+  if (!canSend.value) return
+  emit('send', inputText.value.trim())
   inputText.value = ''
-
   nextTick(() => {
     if (textareaRef.value) {
       textareaRef.value.style.height = 'auto'
@@ -57,86 +70,133 @@ function handleSend() {
 }
 
 function autoResize() {
-  const textarea = textareaRef.value
-  if (!textarea) return
-  textarea.style.height = 'auto'
-  const maxHeight = 120
-  textarea.style.height = Math.min(textarea.scrollHeight, maxHeight) + 'px'
+  const el = textareaRef.value
+  if (!el) return
+  el.style.height = 'auto'
+  const maxH = 120
+  el.style.height = Math.min(el.scrollHeight, maxH) + 'px'
 }
 </script>
 
 <style scoped>
-.chat-input-wrapper {
-  padding: 12px 16px;
-  background: #fff;
-  border-top: 1px solid #eee;
+.input-area {
+  padding: 10px 14px 12px;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.chat-input-container {
+.input-row {
   display: flex;
   align-items: flex-end;
   gap: 10px;
-  background: #f5f5f5;
-  border-radius: 24px;
-  padding: 8px 8px 8px 16px;
 }
 
-.chat-input {
+/* ── 输入框 ── */
+.input-field {
   flex: 1;
+  background: var(--color-bg);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: 10px 16px;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  display: flex;
+  align-items: flex-end;
+}
+
+.input-field:focus-within {
+  border-color: var(--color-primary-light);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.text-input {
+  width: 100%;
   border: none;
   background: transparent;
   resize: none;
   outline: none;
+  font-family: var(--font-family);
   font-size: 15px;
-  line-height: 1.5;
-  color: #333;
+  line-height: 1.6;
+  color: var(--color-text-primary);
   min-height: 24px;
   max-height: 120px;
   overflow-y: auto;
 }
 
-.chat-input::placeholder {
-  color: #999;
+.text-input::placeholder {
+  color: var(--color-text-muted);
 }
 
-.chat-input:disabled {
-  opacity: 0.6;
+.text-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
+/* ── 发送按钮 ── */
 .send-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-full);
   border: none;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
+  background: var(--color-border);
+  color: var(--color-text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
   flex-shrink: 0;
+  transition: all var(--transition-normal);
+  padding: 0;
 }
 
-.send-btn:hover:not(.disabled) {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+.send-btn.is-active {
+  background: var(--color-bubble-user);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+  transform: scale(1);
 }
 
-.send-btn.disabled {
-  opacity: 0.4;
+.send-btn.is-active:hover {
+  transform: scale(1.06);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+}
+
+.send-btn.is-active:active {
+  transform: scale(0.96);
+}
+
+.send-btn:disabled {
   cursor: not-allowed;
 }
 
-.send-icon {
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.input-hint {
+/* ── 提示文字 ── */
+.input-tip {
   text-align: center;
   font-size: 11px;
-  color: #bbb;
-  margin-top: 6px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.2px;
+}
+
+/* ── 响应式 ── */
+@media (max-width: 480px) {
+  .input-area {
+    padding: 8px 10px 10px;
+  }
+
+  .input-field {
+    padding: 9px 14px;
+  }
+
+  .send-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .text-input {
+    font-size: 14px;
+  }
 }
 </style>

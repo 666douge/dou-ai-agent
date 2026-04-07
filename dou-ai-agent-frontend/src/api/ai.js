@@ -16,6 +16,26 @@ export function streamChatSSE(message, chatId, { onMessage, onError, onDone }) {
   const encodedChatId = encodeURIComponent(chatId)
   const url = `${BASE_URL}/ai/love_app/chat/sse?message=${encodedMessage}&chatId=${encodedChatId}`
 
+  let streamSettled = false
+  const settle = () => {
+    if (streamSettled) return
+    streamSettled = true
+    onDone && onDone()
+  }
+
+  function emitDataLines(text) {
+    const lines = text.split('\n')
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (trimmed.startsWith('data:')) {
+        const data = trimmed.slice(5).trim()
+        if (data) {
+          onMessage(data)
+        }
+      }
+    }
+  }
+
   fetch(url, {
     method: 'GET',
     headers: { 'Accept': 'text/event-stream' },
@@ -32,10 +52,11 @@ export function streamChatSSE(message, chatId, { onMessage, onError, onDone }) {
       function read() {
         reader.read().then(({ done, value }) => {
           if (done) {
+            // 与中间块一致：按 SSE 行解析尾部 buffer，避免把 "data:xxx" 整段当正文
             if (buffer.trim()) {
-              onMessage(buffer)
+              emitDataLines(buffer)
             }
-            onDone && onDone()
+            settle()
             return
           }
           buffer += decoder.decode(value, { stream: true })
@@ -56,6 +77,7 @@ export function streamChatSSE(message, chatId, { onMessage, onError, onDone }) {
           if (err.name !== 'AbortError') {
             onError && onError(err)
           }
+          settle()
         })
       }
 
@@ -65,6 +87,7 @@ export function streamChatSSE(message, chatId, { onMessage, onError, onDone }) {
       if (err.name !== 'AbortError') {
         onError && onError(err)
       }
+      settle()
     })
 
   return controller
