@@ -86,21 +86,17 @@ function handleSend(text) {
   scrollToBottom()
 
   aiTyping.value = true
-  let aiResponse = ''
 
-  const controller = streamChatManus(text, {
+  // 后端每条 SSE data 对应智能体一个步骤，单独一条气泡展示（与恋爱大师页拼接模式不同）
+  streamChatManus(text, {
     onMessage: (data) => {
-      aiResponse += data
-      const lastIndex = messages.value.length - 1
-      if (lastIndex >= 0 && !messages.value[lastIndex].isUser) {
-        messages.value[lastIndex].content += data
-      } else {
-        messages.value.push({
-          content: data,
-          isUser: false,
-          time: formatTime()
-        })
-      }
+      const chunk = typeof data === 'string' ? data : String(data)
+      if (!chunk.trim()) return
+      messages.value.push({
+        content: chunk,
+        isUser: false,
+        time: formatTime()
+      })
       scrollToBottom()
     },
     onError: (error) => {
