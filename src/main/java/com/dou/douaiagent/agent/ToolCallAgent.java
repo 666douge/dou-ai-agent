@@ -222,7 +222,7 @@ public class ToolCallAgent extends ReActAgent{
         }
         //解析调用工具返回的结果
         String results = toolResponseMessage.getResponses().stream()
-                .map(toolResponse -> "工具 " + toolResponse.name() + ", 返回结果：" + toolResponse.responseData())
+                .map(toolResponse -> "调用工具 " + toolResponse.name() + ", 返回结果：" + toolResponse.responseData())
                 .collect(Collectors.joining("\n"));
 
 

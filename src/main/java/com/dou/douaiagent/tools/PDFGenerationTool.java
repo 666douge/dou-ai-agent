@@ -36,6 +36,7 @@ public class PDFGenerationTool {
 //                        PdfFontFactory.EmbeddingStrategy.PREFER_EMBEDDED);
                 // 使用内置中文字体
                 PdfFont font = PdfFontFactory.createFont("STSongStd-Light", "UniGB-UCS2-H");
+
                 document.setFont(font);
                 // 创建段落
 
@@ -44,9 +45,11 @@ public class PDFGenerationTool {
                 // 添加段落并关闭文档
                 document.add(paragraph);
             }
-            return "PDF generated successfully to: " + filePath;
+            //return "PDF generated successfully to: " + filePath;
+            return "PDF生成成功 ，文件路径: " + filePath;
         } catch (IOException e) {
-            return "Error generating PDF: " + e.getMessage();
+            //return "Error generating PDF: " + e.getMessage();
+            return "PDF生成异常: " + e.getMessage();
         }
     }
 

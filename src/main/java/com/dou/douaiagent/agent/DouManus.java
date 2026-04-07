@@ -28,7 +28,7 @@ public class DouManus extends  ToolCallAgent{
                 "If you want to stop the interaction at any point, use the `terminate` tool/function call." +
                 "If you cannot understand the question, you can append the keyword '[ASK_USER]' to it to ask a human for help";
         this.setNextStepPrompt(NEXT_STEP_PROMPT);
-        this.setMaxSteps(15);
+        this.setMaxSteps(10);
         //初始化ChatClient
         ChatClient chatClient = ChatClient.builder(dashscopeChatModel)
                 .defaultAdvisors(new MyLoggerAdvisor())

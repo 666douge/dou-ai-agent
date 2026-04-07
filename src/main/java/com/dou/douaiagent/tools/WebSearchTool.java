@@ -31,6 +31,7 @@ public class WebSearchTool {
         Map<String, Object> paramMap = new HashMap<>();
         paramMap.put("q", query);
         paramMap.put("api_key", apiKey);
+        //调用百度引擎
         paramMap.put("engine", "baidu");
         try {
             String response = HttpUtil.get(SEARCH_API_URL, paramMap);
@@ -38,6 +39,9 @@ public class WebSearchTool {
             JSONObject jsonObject = JSONUtil.parseObj(response);
             // 提取 organic_results 部分
             JSONArray organicResults = jsonObject.getJSONArray("organic_results");
+            if(organicResults == null || organicResults.size() == 0){
+                return "搜索百度网页，未搜索到相关信息";
+            }
             List<Object> objects = organicResults.subList(0, 5);
             // 拼接搜索结果为字符串
             String result = objects.stream().map(obj -> {
