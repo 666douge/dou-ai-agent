@@ -1,6 +1,8 @@
 package com.dou.douaiagent.rag;
 
+import cn.hutool.core.collection.CollUtil;
 import jakarta.annotation.Resource;
+import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.pgvector.PgVectorStore;
@@ -8,6 +10,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+
+import java.util.List;
 
 import static org.springframework.ai.vectorstore.pgvector.PgVectorStore.PgDistanceType.COSINE_DISTANCE;
 import static org.springframework.ai.vectorstore.pgvector.PgVectorStore.PgIndexType.HNSW;
@@ -21,6 +25,8 @@ public class LoveAppPgVectorVectorStoreConfig {
 
     @Resource
     private LoveAppDocFileLoader loveAppDocFileLoader;
+    @Resource
+    private JdbcTemplate jdbcTemplate;
 
     @Bean
     VectorStore loveAppPgVectorVectorStore(JdbcTemplate jdbcTemplate, EmbeddingModel dashscopeEmbeddingModel) {
@@ -29,7 +35,7 @@ public class LoveAppPgVectorVectorStoreConfig {
         // @SpringBootApplication(exclude = PgVectorStoreAutoConfiguration.class)
         //这样后续就会使用我们指定EmbeddingModel，如下面的指定的dashscopeEmbeddingModel
         PgVectorStore pgVectorStore = PgVectorStore.builder(jdbcTemplate, dashscopeEmbeddingModel)
-                .dimensions(1536)                    // Optional: 设置向量维度
+                .dimensions(1024)                    // Optional: 设置向量维度
                 .distanceType(COSINE_DISTANCE)       // Optional: defaults to COSINE_DISTANCE
                 .indexType(HNSW)                     // Optional: defaults to HNSW
                 .initializeSchema(true)              // Optional: defaults to false
@@ -38,8 +44,26 @@ public class LoveAppPgVectorVectorStoreConfig {
                 .maxDocumentBatchSize(10000)         // Optional: defaults to 10000
                 .build();
 
+        //查询向量数据库中是否有数据
+        Long count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM vector_store",
+                Long.class
+        );
+        if(count > 0){
+            return pgVectorStore;
+        }
         //加载数据
-        pgVectorStore.add(loveAppDocFileLoader.loadDocFiles());
+        List<Document> result = loveAppDocFileLoader.loadDocFiles();
+        if(result != null && !result.isEmpty()){
+            //新版本做了限制，批次只能最多插入10条（可以通过写代码解除限制，这里先不解除限制），所以拆分list，进行分批插入
+            List<List<Document>> split = CollUtil.split(result, 10);
+            //调用PGVectorStore的保存方法
+            split.stream().filter(curlist ->
+                !curlist.isEmpty()
+            ).forEach(pgVectorStore::add);
+        }
         return pgVectorStore;
     }
+
+
 }

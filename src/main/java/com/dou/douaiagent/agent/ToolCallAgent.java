@@ -47,9 +47,8 @@ public class ToolCallAgent extends ReActAgent{
         this.avaliabletools = avaliabletools;
         this.toolCallingManager = ToolCallingManager.builder().build();
         //禁用spring AI 的内部调用机制，自己维护选项和消息上下文
-        //因为阿里云（DashScope）大模型对spring AI框架兼容性有些差异，不能直接使用spring AI的官方写法
         this.chatOptions = DashScopeChatOptions.builder()
-                .withProxyToolCalls(true)
+                .withInternalToolExecutionEnabled(false)
                 .build();
 
           //下面spring AI官方 的 禁用内部调用机制 的写法

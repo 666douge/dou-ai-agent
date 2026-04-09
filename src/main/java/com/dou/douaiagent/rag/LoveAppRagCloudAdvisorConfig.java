@@ -3,7 +3,7 @@ package com.dou.douaiagent.rag;
 import com.alibaba.cloud.ai.dashscope.api.DashScopeApi;
 import com.alibaba.cloud.ai.dashscope.rag.DashScopeDocumentRetriever;
 import com.alibaba.cloud.ai.dashscope.rag.DashScopeDocumentRetrieverOptions;
-import org.springframework.ai.chat.client.advisor.RetrievalAugmentationAdvisor;
+import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -21,7 +21,7 @@ public class LoveAppRagCloudAdvisorConfig {
 
     @Bean
     public Advisor loveAppRagCloudAdvisor(){
-        DashScopeApi dashScopeApi = new DashScopeApi(apikey);
+        DashScopeApi dashScopeApi = DashScopeApi.builder().apiKey(apikey).build();
         //百炼云平台中知识库的名称
         final String KOWNLEGE_INDEX = "恋爱大师";
         DashScopeDocumentRetriever dashScopeDocumentRetriever = new DashScopeDocumentRetriever(dashScopeApi,

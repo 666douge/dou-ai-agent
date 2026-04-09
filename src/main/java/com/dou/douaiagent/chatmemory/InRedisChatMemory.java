@@ -6,13 +6,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.MessageType;
-import org.springframework.ai.chat.messages.SystemMessage;
-import org.springframework.ai.chat.messages.ToolResponseMessage;
-import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.model.Media;
+import org.springframework.ai.chat.messages.*;
+import org.springframework.ai.content.Media;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -30,9 +25,16 @@ public class InRedisChatMemory implements ChatMemory {
             new TypeReference<>() {};
     private static final TypeReference<List<Media>> MEDIA_LIST_TYPE = new TypeReference<>() {};
 
-    private final RedisTemplate<String, String> redisTemplate;
-    private final ObjectMapper objectMapper;
+    private  RedisTemplate<String, String> redisTemplate;
+    private  ObjectMapper objectMapper;
+    private  int TOP_K;
     private static final String KEY_PREFIX = "chat:memory:";
+
+    public InRedisChatMemory(RedisTemplate<String, String> argRdisTemplate, ObjectMapper objectMapper, int maxMessage){
+        this.redisTemplate = argRdisTemplate;
+        this.objectMapper = objectMapper;
+        this.TOP_K = maxMessage;
+    }
 
     @Override
     public void add(String conversationId, Message message) {
@@ -57,7 +59,7 @@ public class InRedisChatMemory implements ChatMemory {
     }
 
     @Override
-    public List<Message> get(String conversationId, int lastN) {
+    public List<Message> get(String conversationId) {
         List<String> values = redisTemplate.opsForList().range(KEY_PREFIX + conversationId, 0, -1);
         if (values == null || values.isEmpty()) {
             return List.of();
@@ -66,8 +68,10 @@ public class InRedisChatMemory implements ChatMemory {
                 .map(this::deserializeMessage)
                 .filter(m -> m != null)
                 .toList();
+
+
         int size = messages.size();
-        int skip = Math.max(0, size - lastN);
+        int skip = Math.max(0, size - this.TOP_K);
         return messages.stream().skip(skip).toList();
     }
 
@@ -86,7 +90,7 @@ public class InRedisChatMemory implements ChatMemory {
             return switch (type) {
                 case USER -> {
                     List<Media> media = readMediaList(root.get("media"));
-                    yield new UserMessage(text, media, metadata);
+                    yield UserMessage.builder().text(text).media(media).metadata(metadata).build();
                 }
                 case ASSISTANT -> {
                     List<AssistantMessage.ToolCall> toolCalls = readToolCalls(root.get("toolCalls"));

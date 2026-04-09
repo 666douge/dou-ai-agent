@@ -2,15 +2,14 @@
 package com.dou.douaiagent.advisor;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.ChatClientMessageAggregator;
+import org.springframework.ai.chat.client.ChatClientRequest;
+import org.springframework.ai.chat.client.ChatClientResponse;
+import org.springframework.ai.chat.client.advisor.api.CallAdvisor;
+import org.springframework.ai.chat.client.advisor.api.CallAdvisorChain;
+import org.springframework.ai.chat.client.advisor.api.StreamAdvisor;
+import org.springframework.ai.chat.client.advisor.api.StreamAdvisorChain;
 import reactor.core.publisher.Flux;
-
-import org.springframework.ai.chat.client.advisor.api.AdvisedRequest;
-import org.springframework.ai.chat.client.advisor.api.AdvisedResponse;
-import org.springframework.ai.chat.client.advisor.api.CallAroundAdvisor;
-import org.springframework.ai.chat.client.advisor.api.CallAroundAdvisorChain;
-import org.springframework.ai.chat.client.advisor.api.StreamAroundAdvisor;
-import org.springframework.ai.chat.client.advisor.api.StreamAroundAdvisorChain;
-import org.springframework.ai.chat.model.MessageAggregator;
 
 /**
  * A simple logger advisor that logs the request and response messages.
@@ -18,7 +17,7 @@ import org.springframework.ai.chat.model.MessageAggregator;
  * @author Christian Tzolov
  */
 @Slf4j
-public class MyLoggerAdvisor implements CallAroundAdvisor, StreamAroundAdvisor {
+public class MyLoggerAdvisor implements CallAdvisor, StreamAdvisor {
 
 
 	@Override
@@ -31,37 +30,34 @@ public class MyLoggerAdvisor implements CallAroundAdvisor, StreamAroundAdvisor {
 		return 1;
 	}
 
-	private AdvisedRequest before(AdvisedRequest request) {
-	    log.info("AI Request: {}", request.userText());
-		return request;
+	private ChatClientRequest before(ChatClientRequest chatClientRequest) {
+	    log.info("AI Request: {}", chatClientRequest.prompt());
+		return chatClientRequest;
 	}
 
-	private void observeAfter(AdvisedResponse advisedResponse) {
-		log.info("AI Response: {}, 消耗的Token: {}", advisedResponse.response().getResult().getOutput().getText(), advisedResponse.response().getMetadata().getUsage());
+	private void observeAfter(ChatClientResponse chatClientResponse) {
+
+		log.info("AI Response: {}, 消耗的Token: {}", chatClientResponse.chatResponse().getResult().getOutput().getText(), chatClientResponse.chatResponse().getMetadata().getUsage());
 
 	}
 
 
 	@Override
-	public AdvisedResponse aroundCall(AdvisedRequest advisedRequest, CallAroundAdvisorChain chain) {
+	public ChatClientResponse adviseCall(ChatClientRequest chatClientRequest, CallAdvisorChain callAdvisorChain) {
+		chatClientRequest = before(chatClientRequest);
 
-		advisedRequest = before(advisedRequest);
+		ChatClientResponse chatClientResponse = callAdvisorChain.nextCall(chatClientRequest);
 
-		AdvisedResponse advisedResponse = chain.nextAroundCall(advisedRequest);
+		observeAfter(chatClientResponse);
 
-		observeAfter(advisedResponse);
-
-		return advisedResponse;
+		return chatClientResponse;
 	}
 
 	@Override
-	public Flux<AdvisedResponse> aroundStream(AdvisedRequest advisedRequest, StreamAroundAdvisorChain chain) {
+	public Flux<ChatClientResponse> adviseStream(ChatClientRequest chatClientRequest, StreamAdvisorChain streamAdvisorChain) {
+		chatClientRequest = before(chatClientRequest);
 
-		advisedRequest = before(advisedRequest);
-
-		Flux<AdvisedResponse> advisedResponses = chain.nextAroundStream(advisedRequest);
-
-		return new MessageAggregator().aggregateAdvisedResponse(advisedResponses, this::observeAfter);
+		Flux<ChatClientResponse> chatClientResponseFlux = streamAdvisorChain.nextStream(chatClientRequest);
+		return new ChatClientMessageAggregator().aggregateChatClientResponse(chatClientResponseFlux, this::observeAfter);
 	}
-
 }

@@ -7,10 +7,11 @@ spring:
   ai:
     vectorstore:
       pgvector:
-      index-type: HNSW
-      distance-type: COSINE_DISTANCE
-      dimensions: 1536
-      max-document-batch-size: 10000 # Optional: Maximum number of documents per batch
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 1024
+        max-document-batch-size: 10000 # Optional: Maximum number of documents per batch
+
     mcp: #mcp服务的配置
       client:
 #        sse:
